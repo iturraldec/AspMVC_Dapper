@@ -1,31 +1,58 @@
-﻿using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using AspMVC_Dapper.Models;
+using Microsoft.Data.SqlClient;
+using Dapper;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AspMVC_Dapper.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly string _connectionString;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController()
     {
-        _logger = logger;
+        _connectionString = "Server=localhost,1433; Database=Northwind; User ID=sa; Password=J1z01234_; Encrypt=False;";
     }
 
-    public IActionResult Index()
+    public ActionResult Index()
     {
-        return View();
+        var categories = new List<Category>();
+
+        using (var connection = new SqlConnection(_connectionString)) 
+        {    
+            var sql = "SELECT CategoryId, CategoryName, Description FROM Categories Order By CategoryName";      
+            categories = connection.Query<Category>(sql).ToList(); 
+        }
+        
+        IEnumerable<SelectListItem> items = from value in categories
+                                            select new SelectListItem(value.CategoryName, value.CategoryId.ToString());
+
+        return View(items);
     }
 
-    public IActionResult Privacy()
+    public ActionResult GetProductos(int? idCategoria)
     {
-        return View();
+        var products = new List<Product>();
+
+        using (var connection = new SqlConnection(_connectionString)) 
+        {    
+            var sql = "SELECT ProductId, CategoryId, ProductName, QuantityPerUnit, UnitPrice FROM Products WHERE CategoryId = @IdCategoria Order By ProductName";
+            products = connection.Query<Product>(sql, new {IdCategoria = idCategoria}).ToList(); 
+        }
+
+        return Ok(products);
     }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    [HttpPost]
+    public ActionResult AddProduct([FromBody] ProductRequest productRequest)
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var sql = "INSERT INTO Products (CategoryId, ProductName, QuantityPerUnit, UnitPrice) VALUES (@CategoryId, @Name, @Unit, @Price)";
+		    var rowsAffected = connection.Execute(sql, productRequest);
+	    }
+
+        return Ok(productRequest);
     }
 }

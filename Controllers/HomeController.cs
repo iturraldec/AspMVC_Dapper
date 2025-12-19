@@ -15,14 +15,14 @@ public class HomeController : Controller
         _connectionString = "Server=localhost,1433; Database=Northwind; User ID=sa; Password=J1z01234_; Encrypt=False;";
     }
 
-    public ActionResult Index()
+    public async Task<ActionResult> Index()
     {
-        var categories = new List<Category>();
+        IEnumerable<Category> categories;
 
         using (var connection = new SqlConnection(_connectionString)) 
         {    
             var sql = "SELECT CategoryId, CategoryName, Description FROM Categories Order By CategoryName";      
-            categories = connection.Query<Category>(sql).ToList(); 
+            categories = await connection.QueryAsync<Category>(sql);
         }
         
         IEnumerable<SelectListItem> items = from value in categories
@@ -31,20 +31,33 @@ public class HomeController : Controller
         return View(items);
     }
 
-    public ActionResult GetProductos(int? idCategoria)
+    [HttpGet("GetProductos/{idCategoria}")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProductos([FromRoute] int idCategoria)
     {
-        var products = new List<Product>();
+        IEnumerable<Product> products;
 
         using (var connection = new SqlConnection(_connectionString)) 
         {    
-            var sql = "SELECT ProductId, CategoryId, ProductName, QuantityPerUnit, UnitPrice FROM Products WHERE CategoryId = @IdCategoria Order By ProductName";
-            products = connection.Query<Product>(sql, new {IdCategoria = idCategoria}).ToList(); 
+            var sql = @"SELECT ProductId, CategoryId, ProductName, QuantityPerUnit, UnitPrice 
+                        FROM Products 
+                        WHERE CategoryId = @IdCategoria 
+                        Order By ProductName";
+            products = await connection.QueryAsync<Product>(sql, new {IdCategoria = idCategoria});
+        }
+
+        if (products == null || !products.Any())
+        {
+            return NotFound();
         }
 
         return Ok(products);
     }
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult AddProduct([FromBody] ProductRequest productRequest)
     {
         using (var connection = new SqlConnection(_connectionString))
@@ -53,6 +66,6 @@ public class HomeController : Controller
 		    var rowsAffected = connection.Execute(sql, productRequest);
 	    }
 
-        return Ok(productRequest);
+        return CreatedAtAction(nameof(GetProductos), new { idCategoria = productRequest.CategoryId }, productRequest);
     }
 }

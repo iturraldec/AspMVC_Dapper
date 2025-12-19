@@ -10,10 +10,6 @@
   <div class="col-4">
     @Html.DropDownList("categories", Model, "Seleccione una categoria", new { @class = "form-control" })
   </div>
-
-  <div class="col-3">
-    <button id="load" class="btn btn-primary">Cargar productos</button>
-  </div>
 </div>
 
 <div class="row m-4">
@@ -60,12 +56,12 @@
 @section Scripts {
 <script>
 $(document).ready(function() {
-  $("#load").on("click", function(e) {
-    e.preventDefault();
-
+  //
+  $("#categories").on("change", function() {
     createTable();
-  });
+  })
 
+  //
   $("#agregar").on("click", function(e) {
     e.preventDefault();
 
@@ -115,23 +111,16 @@ $(document).ready(function() {
       });
   });
 
+  //
   function createTable() {
-    let id_categoria = $("#categories").val();
-
-    if (id_categoria == "")
-    {
-      alert("Error: Debes seleccionar una categoria...");
-      return;
-    }
-
-    fetch("Home/GetProductos?idCategoria=" + id_categoria)
-      .then(r => r.json())
-      .then(data => {
-        $('#tcontenido').html("");
-        $.each(data, function(idx, opt) {
-          $('#tcontenido').append('<tr><td>' + opt.productId + '</td><td>' + opt.productName + '</td><td>' + opt.quantityPerUnit + '</td><td>' + opt.unitPrice + '</td></tr>');
-        });
+    fetch("GetProductos/" + $("#categories").val())
+    .then(r => r.json())
+    .then(data => {
+      $('#tcontenido').html("");
+      $.each(data, function(idx, opt) {
+        $('#tcontenido').append('<tr><td>' + opt.productId + '</td><td>' + opt.productName + '</td><td>' + opt.quantityPerUnit + '</td><td>' + opt.unitPrice + '</td></tr>');
       });
+    });
   }
 })
 </script>

@@ -1,14 +1,14 @@
-# Aplicación web ASP.NET Core (Modelo-Vista-Controlador), con C#
+# Aplicación web ASP.NET Core (Modelo-Vista-Controlador), con C# y Dapper
 
 ## Descripción
 
-Aplicación web basada en el framework de Microsoft Asp.Net Core 7.0 y el micro-ORM Dapper.
+Aplicación web basada en el framework de Microsoft Asp.Net Core 9.0 y el micro-ORM Dapper.
 Muestra por pantalla las categorias y los productos de la base de datos de prueba SQL Server 'Northwind', pudiendo agregar productos a la misma.
 
 ## Instalación
 
 Asegurate de:
-- Tener instalado los Runtimes de AspNetCore 7 (ó 6)
+- Tener instalado los Runtimes de AspNetCore 9.0.10
 - Tener instalado el Manejador de base de datos SQL Server
 - Tener instalada la base de datos 'Northwind', puedes descargarla [aqui](https://github.com/microsoft/sql-server-samples/tree/master/samples/databases/)
 - Cambiar la cadena de conexión a la base de datos en el archivo 'Controllers/HomeController.cs' con las credenciales correspondientes a tu manejador
